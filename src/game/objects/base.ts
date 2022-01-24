@@ -87,3 +87,8 @@ export class ObjectBase extends TransformNode {
     this.tracker.clear();
   }
 }
+
+interface MovebalItem extends ObjectBase {
+  getObject(): Mesh;
+  getSize(): [number, number, number];
+}
