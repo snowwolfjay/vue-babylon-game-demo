@@ -13,16 +13,19 @@ import { InterpolateValueAction } from '@babylonjs/core/Actions/interpolateValue
 import { ExecuteCodeAction } from '@babylonjs/core/Actions/directActions';
 import { ActionEvent } from '@babylonjs/core/Actions/actionEvent';
 import { CreateCapsule } from '@babylonjs/core/Meshes/Builders/capsuleBuilder';
+
 export class Human extends ObjectBase implements MovebalItem {
   private body: Mesh;
   constructor(
     name: string,
-    scene: Scene,
+    scene: SceneBase,
     public readonly height = 3,
-    public readonly round = 1
+    public readonly round = 1,
+    meta?: any
   ) {
-    super(name, scene, height);
-    const mat = new StandardMaterial(`human`, scene);
+    super(name, scene, height, meta);
+    this.metadata.instance = this;
+    const mat = new StandardMaterial(`human`, scene.sceneObj);
     mat.diffuseColor = new Color3(1, 0, 1);
     mat.specularColor = new Color3(0.5, 0.6, 0.87);
     mat.emissiveColor = new Color3(1, 1, 1);
@@ -30,25 +33,15 @@ export class Human extends ObjectBase implements MovebalItem {
     const humanSim = CreateCapsule(name, { height, radius: round });
     humanSim.material = mat;
     humanSim.position.addInPlace(new Vector3(0, height / 2, 0));
-    // humanSim.setPivotPoint();new Vector3(0, -height / 2, 0)
-    humanSim.actionManager = new ActionManager(scene);
-    humanSim.actionManager
-      .registerAction(
-        new ExecuteCodeAction(
-          { trigger: ActionManager.OnPointerOverTrigger },
-          (ev) => {
-            console.log(ev);
-          }
-        )
+    humanSim.actionManager = new ActionManager(scene.sceneObj);
+    humanSim.actionManager.registerAction(
+      new ExecuteCodeAction(
+        { trigger: ActionManager.OnPointerOverTrigger },
+        (ev) => {
+          scene.engine.event$.next({ event: "hover", data: this });
+        }
       )
-      .then(
-        new ExecuteCodeAction(
-          { trigger: ActionManager.OnPointerOutTrigger },
-          (ev) => {
-            console.warn(ev);
-          }
-        )
-      );
+    );
     this.addPart(humanSim);
     this.body = humanSim;
   }
